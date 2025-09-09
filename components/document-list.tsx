@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { fetchDocuments, fetchDocumentsByCategory } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tag, Clock4, FileWarning, ListIcon, ExternalLink, Download, Link, LinkIcon } from 'lucide-react';
+import { Tag, Clock4, FileWarning, ExternalLink, LinkIcon } from 'lucide-react';
+import { Document } from './search-form';
 
 export function DocumentList({
     listName,
@@ -12,7 +13,7 @@ export function DocumentList({
     listName: string;
     categorySlug?: string;
 }) {
-    const [docs, setDocs] = useState<any[]>([]);
+    const [docs, setDocs] = useState<Document[]>([]);
     const [loading, setLoading] = useState(false);
     const [showSkeleton, setShowSkeleton] = useState(false);
     const [initialLoad, setInitialLoad] = useState(true);
@@ -52,7 +53,7 @@ export function DocumentList({
         loadDocuments();
 
         return () => clearTimeout(skeletonTimer);
-    }, [categorySlug, loadDocuments]);
+    }, [categorySlug, loadDocuments, initialLoad]);
 
     if (initialLoad && !showSkeleton) {
         return null; // Blank page for the first second
@@ -104,7 +105,7 @@ export function DocumentList({
 
             {/* Document List */}
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
-                {docs.map((doc: any, index: number) => (
+                {docs.map((doc: Document) => (
                     <div
                         key={doc.id}
                         className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors"

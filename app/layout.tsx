@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
 import { Oxanium } from "next/font/google";
 import "./globals.css";
-import { AppSidebar } from "@/components/app-sidebar";
-import { DocumentList } from "@/components/document-list";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 const oxanium = Oxanium({
     subsets: ["latin"],

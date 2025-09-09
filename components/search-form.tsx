@@ -12,9 +12,22 @@ import {
 import Link from "next/link"
 import { useDebounce } from "@/hooks/use-debounce"
 
+export interface Document {
+    id: string
+    title: string
+    link: string
+    createdAt: string
+    updatedAt: string
+    category: {
+        id: number
+        name: string
+        slug: string
+    }
+}
+
 export function SearchForm() {
     const [query, setQuery] = useState("")
-    const [results, setResults] = useState<any[]>([])
+    const [results, setResults] = useState<Document[]>([])
     const debouncedQuery = useDebounce(query, 300) // 💤 delay for backend
 
     useEffect(() => {

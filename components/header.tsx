@@ -1,5 +1,5 @@
 import { Separator } from "@radix-ui/react-separator";
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from "./ui/breadcrumb";
+import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbSeparator, BreadcrumbPage } from "./ui/breadcrumb";
 import { SidebarTrigger } from "./ui/sidebar";
 
 export default function Header({
