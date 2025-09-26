@@ -206,14 +206,23 @@ app.put('/documents/:id', async ({ params, body }) => {
 app.delete('/documents/:id', async ({ params }) => {
     const id = params.id;
 
+    // First check if the document exists
+    const existingDoc = await db.query.documents.findFirst({
+        where: (docs, { eq }) => eq(docs.id, id),
+    });
+
+    if (!existingDoc) {
+        return { error: 'Document not found' };
+    }
+
+    // Delete all associated document clicks first
+    await db.delete(documentClicks).where(eq(documentClicks.documentId, id));
+
+    // Then delete the document
     const [deletedDoc] = await db
         .delete(documents)
         .where(eq(documents.id, id))
         .returning();
-
-    if (!deletedDoc) {
-        return { error: 'Document not found' };
-    }
 
     return { message: 'Document deleted successfully', document: deletedDoc };
 }, {
