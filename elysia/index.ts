@@ -92,9 +92,7 @@ app.post('/documents', async ({ body, set }) => {
                 };
             }
 
-            const uploadResult = await uploadResponse.json();
-            // Assuming the upload server returns a URL or path in the response
-            finalLink = uploadResult.url || uploadResult.path || uploadResult.link;
+            finalLink = "http://intranet.nsp/dokumenty/navrhy_dokumentov/" + encodeURIComponent(file.name); 
         } catch (error) {
             console.error('File upload error:', error);
             set.status = 500;
