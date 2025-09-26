@@ -231,6 +231,53 @@ app.delete('/documents/:id', async ({ params }) => {
     }),
 });
 
+app.delete('/categories/:id/documents', async ({ params }) => {
+    const categoryId = parseInt(params.id);
+
+    // First check if the category exists
+    const existingCategory = await db.query.categories.findFirst({
+        where: (categories, { eq }) => eq(categories.id, categoryId),
+    });
+
+    if (!existingCategory) {
+        return { error: 'Category not found' };
+    }
+
+    // Get all documents in this category
+    const documentsInCategory = await db.query.documents.findMany({
+        where: (docs, { eq }) => eq(docs.categoryId, categoryId),
+        columns: { id: true }
+    });
+
+    if (documentsInCategory.length === 0) {
+        return { message: 'No documents found in this category', deletedCount: 0 };
+    }
+
+    // Extract document IDs for deletion
+    const documentIds = documentsInCategory.map(doc => doc.id);
+
+    // Delete all associated document clicks first
+    const deletedClicks = await db.delete(documentClicks)
+        .where(sql`${documentClicks.documentId} = ANY(${documentIds})`);
+
+    // Then delete all documents in the category
+    const deletedDocs = await db
+        .delete(documents)
+        .where(eq(documents.categoryId, categoryId))
+        .returning();
+
+    return { 
+        message: 'All documents in category deleted successfully', 
+        category: existingCategory.name,
+        deletedCount: deletedDocs.length,
+        deletedDocuments: deletedDocs
+    };
+}, {
+    params: t.Object({
+        id: t.String(),
+    }),
+});
+
 app.get("/document-stats", async ({ ip }) => {
     console.log(ip);
     const stats = await db.select({
