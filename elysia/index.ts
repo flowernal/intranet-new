@@ -132,7 +132,7 @@ app.get('/search', async ({ query }) => {
     const docs = await db.query.documents.findMany({
         where: (docs, { ilike }) => ilike(docs.title, `%${search}%`),
         limit: 10,
-        orderBy: (docs, { desc }) => [desc(docs.updatedAt)],
+        orderBy: (docs, { desc }) => [desc(docs.createdAt)],
     })
 
     return docs.map((d) => ({
