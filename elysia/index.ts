@@ -45,6 +45,14 @@ app.get('/documents', async ({ query }) => {
     }),
 });
 
+app.get('/categories', async () => {
+    const allCategories = await db.query.categories.findMany({
+        orderBy: (categories, { asc }) => [asc(categories.name)],
+    });
+
+    return allCategories;
+});
+
 app.post('/categories', async ({ body }) => {
     const { name, slug } = body;
     if (!name) return { error: 'Name is required' };
@@ -59,11 +67,44 @@ app.post('/categories', async ({ body }) => {
     }),
 });
 
-app.post('/documents', async ({ body }) => {
-    const { title, link, categoryId, date } = body;
-    if (!title || !link || !categoryId) return { error: 'Missing fields' };
+app.post('/documents', async ({ body, set }) => {
+    const { title, link, categoryId, date, file } = body;
+    if (!title || !categoryId) return { error: 'Title and categoryId are required' };
 
-    const documentData: any = { title, link, categoryId };
+    let finalLink = link;
+
+    // If a file is provided, upload it to the intranet server
+    if (file) {
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const uploadResponse = await fetch('http://intranet.nsp:3000/upload', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!uploadResponse.ok) {
+                set.status = 500;
+                return { error: 'Failed to upload file to intranet server' };
+            }
+
+            const uploadResult = await uploadResponse.json();
+            // Assuming the upload server returns a URL or path in the response
+            finalLink = uploadResult.url || uploadResult.path || uploadResult.link;
+        } catch (error) {
+            console.error('File upload error:', error);
+            set.status = 500;
+            return { error: 'Failed to upload file' };
+        }
+    }
+
+    // If no file and no link provided, return error
+    if (!finalLink) {
+        return { error: 'Either link or file must be provided' };
+    }
+
+    const documentData: any = { title, link: finalLink, categoryId };
 
     if (date) {
         const specifiedDate = new Date(date);
@@ -76,9 +117,10 @@ app.post('/documents', async ({ body }) => {
 }, {
     body: t.Object({
         title: t.String(),
-        link: t.String(),
+        link: t.Optional(t.String()),
         categoryId: t.Integer(),
         date: t.Optional(t.String()),
+        file: t.Optional(t.File()),
     }),
 });
 
@@ -88,7 +130,7 @@ app.get('/search', async ({ query }) => {
 
     const docs = await db.query.documents.findMany({
         where: (docs, { ilike }) => ilike(docs.title, `%${search}%`),
-        limit: 5,
+        limit: 10,
         orderBy: (docs, { desc }) => [desc(docs.updatedAt)],
     })
 
@@ -119,6 +161,60 @@ app.get("/redirect/:id", async ({ params, set, redirect }) => {
     })
 
     return redirect(doc.link);
+}, {
+    params: t.Object({
+        id: t.String(),
+    }),
+});
+
+app.put('/documents/:id', async ({ params, body }) => {
+    const id = params.id;
+    const { title, link, categoryId } = body;
+    
+    if (!title || !link || !categoryId) {
+        return { error: 'Missing required fields' };
+    }
+
+    const [updatedDoc] = await db
+        .update(documents)
+        .set({ 
+            title, 
+            link, 
+            categoryId,
+            updatedAt: new Date()
+        })
+        .where(eq(documents.id, id))
+        .returning();
+
+    if (!updatedDoc) {
+        return { error: 'Document not found' };
+    }
+
+    return updatedDoc;
+}, {
+    params: t.Object({
+        id: t.String(),
+    }),
+    body: t.Object({
+        title: t.String(),
+        link: t.String(),
+        categoryId: t.Integer(),
+    }),
+});
+
+app.delete('/documents/:id', async ({ params }) => {
+    const id = params.id;
+
+    const [deletedDoc] = await db
+        .delete(documents)
+        .where(eq(documents.id, id))
+        .returning();
+
+    if (!deletedDoc) {
+        return { error: 'Document not found' };
+    }
+
+    return { message: 'Document deleted successfully', document: deletedDoc };
 }, {
     params: t.Object({
         id: t.String(),

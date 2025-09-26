@@ -1,8 +1,8 @@
 import { db } from "./client";
 import { documents } from "./schema";
 
-const intranet_page_name = "monitoring";
-const categoryId = 2;
+const intranet_page_name = "formulare";
+const categoryId = 5;
 
 // Fetch http://intranet.nsp:3000/${intranet_page_name}
 const data = await fetch(`http://intranet.nsp:3000/${intranet_page_name}`);
@@ -15,7 +15,7 @@ const jsonData = await data.json();
 
 for (const table of jsonData) {
     for (const row of table.data) {
-        let date = "01.01.1970";
+        let date = "2025-09-19";
         const links: { name: string; url: string }[] = [];
 
         for (const cell of row) {
