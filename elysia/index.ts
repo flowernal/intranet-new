@@ -86,7 +86,10 @@ app.post('/documents', async ({ body, set }) => {
 
             if (!uploadResponse.ok) {
                 set.status = 500;
-                return { error: 'Failed to upload file to intranet server' };
+                return {
+                    error: 'Failed to upload file to intranet server',
+                    fullError: await uploadResponse.text()
+                };
             }
 
             const uploadResult = await uploadResponse.json();
