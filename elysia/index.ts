@@ -253,12 +253,10 @@ app.delete('/categories/:id/documents', async ({ params }) => {
         return { message: 'No documents found in this category', deletedCount: 0 };
     }
 
-    // Extract document IDs for deletion
-    const documentIds = documentsInCategory.map(doc => doc.id);
-
-    // Delete all associated document clicks first
-    const deletedClicks = await db.delete(documentClicks)
-        .where(sql`${documentClicks.documentId} = ANY(${documentIds})`);
+    // Delete all associated document clicks first by iterating through each document
+    for (const doc of documentsInCategory) {
+        await db.delete(documentClicks).where(eq(documentClicks.documentId, doc.id));
+    }
 
     // Then delete all documents in the category
     const deletedDocs = await db
