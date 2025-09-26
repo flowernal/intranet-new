@@ -29,7 +29,7 @@ app.get('/documents', async ({ query }) => {
     }
 
     const docs = await db.query.documents.findMany({
-        orderBy: (docs, { desc }) => [desc(docs.updatedAt)],
+        orderBy: (docs, { desc }) => [desc(docs.createdAt)],
         with: {
             category: true,
         },
