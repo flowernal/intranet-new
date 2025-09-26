@@ -77,7 +77,7 @@ app.post('/documents', async ({ body, set }) => {
     if (file) {
         try {
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('sampleFile', file);
 
             const uploadResponse = await fetch('http://intranet.nsp:3000/upload', {
                 method: 'POST',
